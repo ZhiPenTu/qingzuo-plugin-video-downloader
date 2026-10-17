@@ -1,6 +1,6 @@
 {
   "name": "@commerce/plugin-video-downloader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "commerce": {
@@ -11,11 +11,26 @@
     "category": "视频工具",
     "api": "^1.2.0",
     "ui": "ui/index.html",
-    "releaseNotes": "首版支持粘贴分享链接、解析视频信息并通过系统保存对话框保存无水印视频。",
+    "releaseNotes": "修复抖音分享文案中的附加口令解析，切换解析服务并明确提示图文作品不支持视频下载。",
     "permissions": {
       "files": true,
       "network": [
-        "https://mp.cenguigui.cn"
+        "https://api.bugpk.com",
+        "https://v3-kefu.douyinvod.com",
+        "https://v3-dyseries.douyinvod.com",
+        "https://v11-colds.douyinvod.com",
+        "https://v3-web.douyinvod.com",
+        "https://v26-web.douyinvod.com",
+        "https://v5-dy-o-l.douyinvod.com",
+        "https://v6-dy-o-l.douyinvod.com",
+        "https://v10-dy-o-l.douyinvod.com",
+        "https://v.kwaicdn.com",
+        "https://v2.kwaicdn.com",
+        "https://v3.kwaicdn.com",
+        "https://v4.kwaicdn.com",
+        "https://finder.video.qq.com",
+        "https://video.qq.com",
+        "https://wxvideo.qq.com"
       ]
     }
   },

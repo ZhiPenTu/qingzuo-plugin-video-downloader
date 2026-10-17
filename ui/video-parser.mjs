@@ -1,5 +1,5 @@
-export const PARSER_ORIGIN = 'https://mp.cenguigui.cn';
-export const PARSER_URL = PARSER_ORIGIN + '/api.php';
+export const PARSER_ORIGIN = 'https://api.bugpk.com';
+export const PARSER_URL = PARSER_ORIGIN + '/api/short_videos';
 
 const PLATFORM_HOSTS = [
   { name: '抖音', patterns: [/\.douyin\.com$/i, /\.iesdouyin\.com$/i, /\.douyinvod\.com$/i, /\.douyinpic\.com$/i, /\.365yg\.com$/i] },
@@ -13,7 +13,9 @@ function cleanUrlCandidate(value) {
 
 export function extractShareUrl(value) {
   if (typeof value !== 'string') return null;
-  const match = value.match(/https?:\/\/[^\s<>"'“”‘’]+/i);
+  // Douyin share text often appends a semicolon and an obfuscated code after
+  // the URL (for example: `https://v.douyin.com/abc/;6pm oDU:/`).
+  const match = value.match(/https?:\/\/[^\s<>"'“”‘’；;]+/i);
   if (!match) return null;
   try {
     const url = new URL(cleanUrlCandidate(match[0]));
@@ -44,14 +46,7 @@ export function validateShareText(value) {
 
 export function buildParseUrl(value) {
   const { text } = validateShareText(value);
-  return PARSER_URL + '?url=' + encodeURIComponent(text);
-}
-
-export function buildProxyUrl(videoUrl) {
-  let url;
-  try { url = new URL(videoUrl); } catch { throw new Error('解析结果中的视频地址无效。'); }
-  if (url.protocol !== 'https:') throw new Error('解析结果中的视频地址不安全。');
-  return PARSER_URL + '?action=proxy&u=' + encodeURIComponent(url.href);
+  return PARSER_URL + '?url=' + encodeURIComponent(extractShareUrl(text));
 }
 
 function decodeBase64(value) {
@@ -64,6 +59,14 @@ function responseJson(response) {
   if (!response || typeof response.data !== 'string') throw new Error('解析服务返回了无效响应。');
   try { return JSON.parse(decodeBase64(response.data)); } catch { throw new Error('解析服务返回了无效 JSON。'); }
 }
+
+const DIRECT_MEDIA_ORIGINS = new Set([
+  'https://v3-kefu.douyinvod.com', 'https://v3-dyseries.douyinvod.com', 'https://v11-colds.douyinvod.com',
+  'https://v3-web.douyinvod.com', 'https://v26-web.douyinvod.com', 'https://v5-dy-o-l.douyinvod.com',
+  'https://v6-dy-o-l.douyinvod.com', 'https://v10-dy-o-l.douyinvod.com', 'https://v.kwaicdn.com',
+  'https://v2.kwaicdn.com', 'https://v3.kwaicdn.com', 'https://v4.kwaicdn.com',
+  'https://finder.video.qq.com', 'https://video.qq.com', 'https://wxvideo.qq.com'
+]);
 
 function serviceError(code, message, httpStatus) {
   const number = Number(code || httpStatus || 0);
@@ -98,11 +101,16 @@ export function parseVideoResponse(response, input = {}) {
   if (payload?.ok === false || (code !== undefined && Number(code) !== 200 && !data?.video_url && !data?.video && !data?.url)) {
     throw serviceError(code, message, response.status);
   }
+  const type = firstString(data?.type, data?.media_type)?.toLowerCase();
   const videoUrl = firstString(data?.video_url, data?.video, data?.url, data?.proxy_url);
-  if (!videoUrl) throw new Error(message || '没有找到可下载的视频。');
+  if (!videoUrl) {
+    if (type === 'image' || Array.isArray(data?.images) && data.images.length) throw new Error('这是图文作品，当前只支持视频下载。请粘贴视频作品的分享链接。');
+    throw new Error(message || '没有找到可下载的视频。');
+  }
   let parsedUrl;
   try { parsedUrl = new URL(videoUrl); } catch { throw new Error('解析服务返回了无效的视频地址。'); }
   if (parsedUrl.protocol !== 'https:') throw new Error('解析服务返回了不安全的视频地址。');
+  if (!DIRECT_MEDIA_ORIGINS.has(parsedUrl.origin)) throw new Error('视频来源暂不支持直接保存，请稍后重新解析。');
   const platform = firstString(data?.platform, payload?.platform) || input.platform || '短视频';
   return {
     videoUrl: parsedUrl.href,
@@ -110,7 +118,7 @@ export function parseVideoResponse(response, input = {}) {
     title: firstString(data?.title, data?.desc, data?.description) || '短视频',
     author: normalizeAuthor(data?.author) || '未知作者',
     coverUrl: firstString(data?.cover_url, data?.cover, data?.thumbnail),
-    sourceUrl: firstString(data?.source_url, data?.url) || input.url || null
+    sourceUrl: firstString(data?.source_url) || input.url || null
   };
 }
 
@@ -128,14 +136,14 @@ function safeFilename(value) {
 export async function downloadVideo(client, result) {
   if (!result?.videoUrl) throw new Error('没有可下载的视频。');
   const response = await client.network.request({
-    url: buildProxyUrl(result.videoUrl),
+    url: result.videoUrl,
     method: 'GET',
     responseType: 'file',
     filename: safeFilename(result.title),
     taskId: 'video-download'
   });
   if (response.status < 200 || response.status >= 300) {
-    await client.files.release(response.file.token).catch(() => {});
+    if (response.file?.token) await client.files.release(response.file.token).catch(() => {});
     throw serviceError(response.status, null, response.status);
   }
   if (!response.file?.token || !response.file.size) {
