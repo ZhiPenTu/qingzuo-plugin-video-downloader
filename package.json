@@ -1,0 +1,34 @@
+{
+  "name": "@commerce/plugin-video-downloader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "commerce": {
+    "manifestVersion": 1,
+    "id": "official.video-downloader",
+    "title": "短视频去水印下载",
+    "description": "粘贴抖音、快手或蝴蝶号 / 视频号分享链接，解析并保存无水印视频",
+    "category": "视频工具",
+    "api": "^1.2.0",
+    "ui": "ui/index.html",
+    "releaseNotes": "首版支持粘贴分享链接、解析视频信息并通过系统保存对话框保存无水印视频。",
+    "permissions": {
+      "files": true,
+      "network": [
+        "https://mp.cenguigui.cn"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "pack": "node scripts/pack-plugin.mjs",
+    "test:host": "node tests/host.mjs"
+  },
+  "dependencies": {
+    "@commerce/plugin-sdk": "file:vendor/commerce-plugin-sdk-1.2.0.tgz"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.0"
+  },
+  "license": "MIT"
+}

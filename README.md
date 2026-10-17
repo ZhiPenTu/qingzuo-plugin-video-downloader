@@ -1,0 +1,16 @@
+# Qingzuo 短视频去水印下载插件
+
+独立的轻作插件，支持粘贴抖音、快手和蝴蝶号 / 视频号分享文案，解析视频信息后通过系统保存对话框保存视频文件。
+
+插件只申请 `https://mp.cenguigui.cn` 的受控网络权限和文件保存权限。解析服务返回的媒体地址是短期直链；保存按钮使用同源下载代理读取视频，再交给轻作的私有文件令牌和系统保存对话框。解析服务不可用或视频直链过期时，需要重新解析。
+
+请只保存你有权使用的内容。插件不保存分享文案和解析结果，也不把用户凭据发送给平台。
+
+```sh
+npm ci --ignore-scripts
+npm test
+npm run pack
+QINGZUO_HOST_EXECUTABLE=/path/to/Qingzuo npm run test:host
+```
+
+`npm run pack` 只生成当前平台的 `.ecplugin` 和目录片段；跨平台制品、签名和市场目录由独立发布流程处理。
