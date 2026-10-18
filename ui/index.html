@@ -14,6 +14,22 @@
         <p>粘贴抖音、快手或蝴蝶号 / 视频号的分享文案，解析后保存视频。</p>
       </header>
 
+      <section id="browser-panel" class="panel browser-panel" aria-labelledby="browser-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="browser-title">检测结果</h2>
+            <p id="browser-summary">打开右侧浏览器后自动检测</p>
+          </div>
+          <button id="browser-rescan" class="icon-button secondary" type="button" title="重新扫描">↻<span class="sr-only">重新扫描</span></button>
+        </div>
+        <div class="browser-toolbar">
+          <label class="browser-select-all"><input id="browser-select-all" type="checkbox" disabled /><span>全选可下载项</span></label>
+          <button id="browser-batch-download" type="button" disabled>批量下载</button>
+        </div>
+        <div id="browser-list" class="browser-list" role="list"></div>
+        <p id="browser-status" class="status browser-status" role="status" aria-live="polite"></p>
+      </section>
+
       <section class="panel input-panel" aria-labelledby="input-title">
         <div class="section-heading">
           <div>

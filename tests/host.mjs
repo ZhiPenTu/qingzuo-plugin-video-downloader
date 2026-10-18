@@ -14,6 +14,8 @@ try {
   await host.plugin.locator('#share-text').fill('复制打开抖音 https://v.douyin.com/fixture/');
   await expect(host.plugin.locator('#parse')).toBeEnabled();
   await expect(host.plugin.locator('#save')).toBeDisabled();
+  await expect(host.plugin.getByRole('heading', { name: '检测结果', exact: true })).toBeVisible();
+  await expect(host.plugin.locator('#browser-list')).toContainText('打开一个包含视频或图片的页面');
   console.log('Video downloader plugin host loaded and validated its initial paste-to-parse state.');
 } finally {
   await host.close();

@@ -1,6 +1,6 @@
 {
   "name": "@commerce/plugin-video-downloader",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "commerce": {
@@ -11,9 +11,10 @@
     "category": "视频工具",
     "api": "^1.2.0",
     "ui": "ui/index.html",
-    "releaseNotes": "修复抖音分享文案中的附加口令解析，切换解析服务并明确提示图文作品不支持视频下载。",
+    "releaseNotes": "将浏览器检测结果、批量下载和进度交互迁移到插件界面，保留浏览器会话下载能力。",
     "permissions": {
       "files": true,
+      "browser": ["detect", "download"],
       "network": [
         "https://api.bugpk.com",
         "https://v3-kefu.douyinvod.com",
