@@ -1,6 +1,6 @@
 {
   "name": "@commerce/plugin-video-downloader",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "type": "module",
   "commerce": {
@@ -11,7 +11,7 @@
     "category": "视频工具",
     "api": "^1.2.0",
     "ui": "ui/index.html",
-    "releaseNotes": "新增专属品牌图标，统一插件市场、工具中心与插件管理的视觉呈现。",
+    "releaseNotes": "界面配色统一为轻作底座语义色，支持跟随系统的浅色与深色模式。",
     "permissions": {
       "files": true,
       "browser": [
