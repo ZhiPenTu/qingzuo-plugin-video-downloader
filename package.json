@@ -1,6 +1,6 @@
 {
   "name": "@commerce/plugin-video-downloader",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
   "commerce": {
@@ -11,7 +11,7 @@
     "category": "视频工具",
     "api": "^1.2.0",
     "ui": "ui/index.html",
-    "releaseNotes": "界面配色统一为轻作底座语义色，支持跟随系统的浅色与深色模式。",
+    "releaseNotes": "重新设计链接解析与浏览器检测工作台，收紧圆角和间距，桌面双栏、窄屏单栏展示。",
     "permissions": {
       "files": true,
       "browser": [

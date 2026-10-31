@@ -1,73 +1,79 @@
 <!doctype html>
 <html lang="zh-CN">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>短视频去水印下载</title>
-    <link rel="stylesheet" href="./style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短视频去水印下载 · 轻作</title>
+    <link rel="stylesheet" href="./style.css">
   </head>
   <body>
-    <main>
-      <header class="hero">
-        <span class="eyebrow">轻作 · 视频工具</span>
-        <h1>短视频去水印下载</h1>
-        <p>粘贴抖音、快手或蝴蝶号 / 视频号的分享文案，解析后保存视频。</p>
+    <main class="tool-page">
+      <header class="page-head">
+        <div>
+          <h1>短视频去水印下载</h1>
+          <p>粘贴分享链接解析视频，或从当前浏览器页面批量检测媒体。</p>
+        </div>
+        <span class="mode-badge">抖音 · 快手 · 视频号</span>
       </header>
 
-      <section id="browser-panel" class="panel browser-panel" aria-labelledby="browser-title">
-        <div class="section-heading">
-          <div>
-            <h2 id="browser-title">检测结果</h2>
-            <p id="browser-summary">打开右侧浏览器后自动检测</p>
+      <div class="workspace-grid">
+        <section id="browser-panel" class="card browser-panel" aria-labelledby="browser-title">
+          <div class="section-head">
+            <div>
+              <h2 id="browser-title">检测结果</h2>
+              <p id="browser-summary">打开右侧浏览器后自动检测</p>
+            </div>
+            <button id="browser-rescan" class="icon-button secondary" type="button" title="重新扫描">↻<span class="sr-only">重新扫描</span></button>
           </div>
-          <button id="browser-rescan" class="icon-button secondary" type="button" title="重新扫描">↻<span class="sr-only">重新扫描</span></button>
-        </div>
-        <div class="browser-toolbar">
-          <label class="browser-select-all"><input id="browser-select-all" type="checkbox" disabled /><span>全选可下载项</span></label>
-          <button id="browser-batch-download" type="button" disabled>批量下载</button>
-        </div>
-        <div id="browser-list" class="browser-list" role="list"></div>
-        <p id="browser-status" class="status browser-status" role="status" aria-live="polite"></p>
-      </section>
+          <div class="browser-toolbar">
+            <label class="browser-select-all"><input id="browser-select-all" type="checkbox" disabled><span>全选可下载项</span></label>
+            <button id="browser-batch-download" class="small-button" type="button" disabled>批量下载</button>
+          </div>
+          <div id="browser-list" class="browser-list" role="list"></div>
+          <p id="browser-status" class="status browser-status" role="status" aria-live="polite"></p>
+        </section>
 
-      <section class="panel input-panel" aria-labelledby="input-title">
-        <div class="section-heading">
-          <div>
-            <h2 id="input-title">分享链接</h2>
-            <p>可以直接粘贴从 App 复制的整段分享文案。</p>
-          </div>
-          <span class="platform-hint">抖音 · 快手 · 蝴蝶号 / 视频号</span>
-        </div>
-        <label class="sr-only" for="share-text">视频分享链接</label>
-        <textarea id="share-text" rows="5" maxlength="2000" placeholder="粘贴分享链接或分享文案"></textarea>
-        <div class="actions">
-          <button id="parse" type="button">解析视频</button>
-          <button id="cancel" class="secondary" type="button" disabled>取消</button>
-        </div>
-      </section>
+        <div class="side-column">
+          <section class="card input-panel" aria-labelledby="input-title">
+            <div class="section-head">
+              <div>
+                <h2 id="input-title">分享链接</h2>
+                <p>可以直接粘贴从 App 复制的整段分享文案。</p>
+              </div>
+            </div>
+            <label class="sr-only" for="share-text">视频分享链接</label>
+            <textarea id="share-text" rows="5" maxlength="2000" placeholder="粘贴分享链接或分享文案"></textarea>
+            <div class="actions">
+              <button id="parse" type="button">解析视频</button>
+              <button id="cancel" class="secondary" type="button" disabled>取消</button>
+            </div>
+          </section>
 
-      <section id="result-panel" class="panel result-panel" aria-labelledby="result-title" hidden>
-        <div class="section-heading">
-          <div>
-            <h2 id="result-title">解析结果</h2>
-            <p id="result-description">链接已解析，可以保存视频。</p>
-          </div>
-          <span id="platform" class="platform-badge"></span>
-        </div>
-        <div class="result-card">
-          <div class="result-icon" aria-hidden="true">▶</div>
-          <div class="result-info">
-            <h3 id="title"></h3>
-            <p id="author"></p>
-          </div>
-        </div>
-        <div class="actions result-actions">
-          <button id="save" type="button" disabled>保存视频</button>
-          <a id="open-link" class="button-link" target="_blank" rel="noreferrer" hidden>打开下载链接</a>
-        </div>
-      </section>
+          <section id="result-panel" class="card result-panel" aria-labelledby="result-title" hidden>
+            <div class="section-head">
+              <div>
+                <h2 id="result-title">解析结果</h2>
+                <p id="result-description">链接已解析，可以保存视频。</p>
+              </div>
+              <span id="platform" class="platform-badge"></span>
+            </div>
+            <div class="result-card">
+              <div class="result-icon" aria-hidden="true">▶</div>
+              <div class="result-info">
+                <h3 id="title"></h3>
+                <p id="author"></p>
+              </div>
+            </div>
+            <div class="actions result-actions">
+              <button id="save" type="button" disabled>保存视频</button>
+              <a id="open-link" class="button-link" target="_blank" rel="noreferrer" hidden>打开下载链接</a>
+            </div>
+          </section>
 
-      <p id="status" class="status" role="status" aria-live="polite"></p>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+
       <p class="footnote">请只保存你有权使用的内容。解析链接可能随平台有效期变化，失效后请重新解析。</p>
     </main>
     <script type="module" src="./app.mjs"></script>

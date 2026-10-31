@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { launchPluginTestHost } from '@commerce/plugin-sdk/testing';
+import { launchPluginTestHost } from './launch-host.mjs';
 
 const pkg = JSON.parse(await readFile('package.json', 'utf8'));
 const platform = process.platform + '-' + process.arch;
