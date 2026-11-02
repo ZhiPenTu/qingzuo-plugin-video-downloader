@@ -1,17 +1,17 @@
 {
   "name": "@commerce/plugin-video-downloader",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "type": "module",
   "commerce": {
     "manifestVersion": 1,
     "id": "official.video-downloader",
     "title": "短视频去水印下载",
-    "description": "粘贴抖音、快手或蝴蝶号 / 视频号分享链接，解析并保存无水印视频",
+    "description": "解析抖音、快手和视频号分享链接并保存无水印视频，支持浏览器页面媒体批量检测与下载",
     "category": "视频工具",
     "api": "^1.2.0",
     "ui": "ui/index.html",
-    "releaseNotes": "重新设计链接解析与浏览器检测工作台，收紧圆角和间距，桌面双栏、窄屏单栏展示。",
+    "releaseNotes": "修复部分网络环境下解析服务无法连接的问题；失效链接会给出明确提示；保存流程改用解析服务视频流，兼容更多媒体直链。",
     "permissions": {
       "files": true,
       "browser": [

@@ -84,13 +84,5 @@ jobs:
       - name: Publish independently validated artifacts
         run: |
           node --input-type=module -e "import pkg from './package.json' with {type:'json'};if(process.env.GITHUB_REF_NAME!=='v'+pkg.version)throw new Error('Tag mismatch');"
-          gh release create "$GITHUB_REF_NAME" release/*.ecplugin release/catalog-*.json --verify-tag --title "$GITHUB_REF_NAME" --notes "重新设计链接解析与浏览器检测工作台，收紧圆角和间距，桌面双栏、窄屏单栏展示。"
-      - name: Notify market when restricted dispatch credentials are configured
-        env:
-          GH_TOKEN: ${{ secrets.MARKET_TRIGGER_TOKEN }}
-        run: |
-          if [[ -n "$GH_TOKEN" ]]; then
-            gh api --method POST repos/ZhiPenTu/qingzuo-market/actions/workflows/ingest.yml/dispatches -f ref=main -f "inputs[repository]=$GITHUB_REPOSITORY" -f "inputs[tag]=$GITHUB_REF_NAME"
-          else
-            echo "The market scheduled workflow will propose this stable release."
-          fi
+          node --input-type=module -e "import pkg from './package.json' with {type:'json'};process.stdout.write(pkg.commerce.releaseNotes || process.env.GITHUB_REF_NAME)" > release-notes.txt
+          gh release create "$GITHUB_REF_NAME" release/*.ecplugin release/catalog-*.json --verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.txt
