@@ -1,5 +1,5 @@
-export const PARSER_ORIGIN = 'https://api.bugpk.com';
-export const PARSER_URL = PARSER_ORIGIN + '/api/short_videos';
+export const PARSER_ORIGIN = 'https://video.zacao.top';
+export const PARSER_URL = PARSER_ORIGIN + '/api/parse/v2';
 
 const PLATFORM_HOSTS = [
   { name: '抖音', patterns: [/\.douyin\.com$/i, /\.iesdouyin\.com$/i, /\.douyinvod\.com$/i, /\.douyinpic\.com$/i, /\.365yg\.com$/i] },
@@ -61,6 +61,7 @@ function responseJson(response) {
 }
 
 const DIRECT_MEDIA_ORIGINS = new Set([
+  PARSER_ORIGIN,
   'https://v3-kefu.douyinvod.com', 'https://v3-dyseries.douyinvod.com', 'https://v11-colds.douyinvod.com',
   'https://v3-web.douyinvod.com', 'https://v26-web.douyinvod.com', 'https://v5-dy-o-l.douyinvod.com',
   'https://v6-dy-o-l.douyinvod.com', 'https://v10-dy-o-l.douyinvod.com', 'https://v.kwaicdn.com',
@@ -70,11 +71,20 @@ const DIRECT_MEDIA_ORIGINS = new Set([
 
 function serviceError(code, message, httpStatus) {
   const number = Number(code || httpStatus || 0);
+  if (number === 400) return new Error(message || '链接格式不正确，请粘贴完整的分享链接。');
   if (number === 401) return new Error('解析服务需要有效的访问密钥。');
   if (number === 402) return new Error('解析服务额度不足。');
-  if (number === 404) return new Error('链接暂不支持，或视频已删除 / 设为私密。');
+  if (number === 403) {
+    if (/key|密钥|鉴权|api\s*key/i.test(message || '')) return new Error('解析服务需要有效的访问密钥。');
+    return new Error('链接内容暂时无法访问，请稍后重试。');
+  }
+  if (number === 404) return new Error('链接已失效，或视频已删除 / 设为私密。');
   if (number === 429) return new Error('解析请求过于频繁，请稍后手动重试。');
-  if (number === 400 || number === 203 || number === 204) return new Error(message || '没有找到可下载的视频。');
+  if ([500, 502, 503].includes(number)) {
+    if (/链接|不可访问|无法访问|不存在|已删除/i.test(message || '')) return new Error('链接已失效或无法访问，请复制新的分享链接。');
+    return new Error('解析服务暂时不可用，请稍后重试。');
+  }
+  if (number === 203 || number === 204) return new Error(message || '没有找到可下载的视频。');
   return new Error(message || (httpStatus ? `解析服务未完成处理（${httpStatus}）。` : '没有找到可下载的视频。'));
 }
 
@@ -88,32 +98,62 @@ function normalizeAuthor(value) {
   return firstString(value.nickname, value.name, value.author, value.unique_id);
 }
 
+function httpsUrl(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+function downloadUrlFor(data) {
+  const streamUrl = firstString(data?.streamUrl, data?.stream_url);
+  if (streamUrl) {
+    let stream;
+    try { stream = new URL(streamUrl, PARSER_ORIGIN); } catch { throw new Error('解析服务返回了无效的视频地址。'); }
+    if (stream.protocol !== 'https:') throw new Error('解析服务返回了不安全的视频地址。');
+    if (!DIRECT_MEDIA_ORIGINS.has(stream.origin)) throw new Error('视频来源暂不支持直接保存，请稍后重新解析。');
+    return stream.href;
+  }
+  const directUrl = firstString(data?.video_url, data?.source_video_url, data?.sourceURL, data?.url, data?.proxy_url);
+  if (!directUrl) return null;
+  const direct = httpsUrl(directUrl);
+  if (!direct) throw new Error('解析服务返回了不安全的视频地址。');
+  if (!DIRECT_MEDIA_ORIGINS.has(direct.origin)) throw new Error('视频来源暂不支持直接保存，请稍后重新解析。');
+  return direct.href;
+}
+
 export function parseVideoResponse(response, input = {}) {
   if (!response || response.status < 200 || response.status >= 300) {
     let message = null;
-    try { message = responseJson(response)?.msg ?? null; } catch { /* use the HTTP status */ }
+    try {
+      const payload = responseJson(response);
+      message = firstString(payload?.message, payload?.msg);
+    } catch { /* use the HTTP status */ }
     throw serviceError(response?.status, message, response?.status);
   }
   const payload = responseJson(response);
   const code = payload?.code ?? payload?.status_code ?? payload?.data?.code;
   const data = payload?.data ?? payload?.result ?? payload;
-  const message = firstString(payload?.msg, payload?.message, data?.msg);
-  if (payload?.ok === false || (code !== undefined && Number(code) !== 200 && !data?.video_url && !data?.video && !data?.url)) {
+  const message = firstString(payload?.message, payload?.msg, data?.message, data?.msg);
+  if (payload?.ok === false || payload?.succ === false || (code !== undefined && Number(code) !== 200)) {
     throw serviceError(code, message, response.status);
   }
-  const type = firstString(data?.type, data?.media_type)?.toLowerCase();
-  const videoUrl = firstString(data?.video_url, data?.video, data?.url, data?.proxy_url);
-  if (!videoUrl) {
-    if (type === 'image' || Array.isArray(data?.images) && data.images.length) throw new Error('这是图文作品，当前只支持视频下载。请粘贴视频作品的分享链接。');
-    throw new Error(message || '没有找到可下载的视频。');
+  if (!data || typeof data !== 'object') throw new Error('解析服务返回了无效响应。');
+  const type = data?.media_type ?? data?.type;
+  if (type === 0 || String(type).toLowerCase() === 'image' || (Array.isArray(data?.images) && data.images.length) || (Array.isArray(data?.image_list) && data.image_list.length)) {
+    throw new Error('这是图文作品，当前只支持视频下载。请粘贴视频作品的分享链接。');
   }
-  let parsedUrl;
-  try { parsedUrl = new URL(videoUrl); } catch { throw new Error('解析服务返回了无效的视频地址。'); }
-  if (parsedUrl.protocol !== 'https:') throw new Error('解析服务返回了不安全的视频地址。');
-  if (!DIRECT_MEDIA_ORIGINS.has(parsedUrl.origin)) throw new Error('视频来源暂不支持直接保存，请稍后重新解析。');
+  const directUrl = firstString(data?.video_url, data?.source_video_url, data?.sourceURL, data?.url, data?.proxy_url);
+  const downloadUrl = downloadUrlFor(data);
+  if (!directUrl && !downloadUrl) throw new Error(message || '没有找到可下载的视频。');
+  const videoUrl = httpsUrl(directUrl)?.href || downloadUrl;
   const platform = firstString(data?.platform, payload?.platform) || input.platform || '短视频';
   return {
-    videoUrl: parsedUrl.href,
+    videoUrl,
+    downloadUrl: downloadUrl || videoUrl,
     platform,
     title: firstString(data?.title, data?.desc, data?.description) || '短视频',
     author: normalizeAuthor(data?.author) || '未知作者',
@@ -124,7 +164,15 @@ export function parseVideoResponse(response, input = {}) {
 
 export async function parseVideo(client, value) {
   const input = validateShareText(value);
-  const response = await client.network.request({ url: buildParseUrl(input.text), method: 'GET', responseType: 'data', taskId: 'video-parse' });
+  let response;
+  try {
+    response = await client.network.request({ url: buildParseUrl(input.text), method: 'GET', responseType: 'data', taskId: 'video-parse' });
+  } catch (error) {
+    const text = error?.message || '';
+    if (/取消/.test(text)) throw new Error('解析已取消。');
+    if (/网络请求未完成|网络连接失败|ECONNRESET|ENOTFOUND/i.test(text)) throw new Error('解析服务暂时无法连接，请稍后重试。');
+    throw error;
+  }
   return parseVideoResponse(response, input);
 }
 
@@ -134,14 +182,22 @@ function safeFilename(value) {
 }
 
 export async function downloadVideo(client, result) {
-  if (!result?.videoUrl) throw new Error('没有可下载的视频。');
-  const response = await client.network.request({
-    url: result.videoUrl,
-    method: 'GET',
-    responseType: 'file',
-    filename: safeFilename(result.title),
-    taskId: 'video-download'
-  });
+  const downloadUrl = result?.downloadUrl || result?.videoUrl;
+  if (!downloadUrl) throw new Error('没有可下载的视频。');
+  let response;
+  try {
+    response = await client.network.request({
+      url: downloadUrl,
+      method: 'GET',
+      responseType: 'file',
+      filename: safeFilename(result.title),
+      taskId: 'video-download'
+    });
+  } catch (error) {
+    const text = error?.message || '';
+    if (/网络请求未完成|网络连接失败|ECONNRESET|ENOTFOUND/i.test(text)) throw new Error('视频下载未完成，请稍后重试。');
+    throw error;
+  }
   if (response.status < 200 || response.status >= 300) {
     if (response.file?.token) await client.files.release(response.file.token).catch(() => {});
     throw serviceError(response.status, null, response.status);
